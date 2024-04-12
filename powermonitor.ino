@@ -8,11 +8,21 @@ Current readings A2>1 A3>2 A4>3 A5>4
 Based on current sensor ACS712 for 5AMPS 185mv/1A
 Relay pins works as LOW = ON / HIGH = OFF
 For arduino relay modules
+!!!!!!! ATTENTION !!!!!!!
+Please pay attention to change:
+IP Address, compatible with your local network
+int maxvolt = X; is the maximun voltage of the voltage divider, example if you wanna measure from 0 to MAX 15v external,
+you will need a 1/3 voltage divider like 3 1K resistor in series, to have on the last resistor 5v/GND, for max 20v a 1/4 divider etc.
+
+int intV = X it the internal (theroically) 5v, need to be right for the current sensor calibration, just measure the circuit when powered up
+if you dont need extremly precision you can just use 5 and the current will be aproximately
+
 ==============================================================================================================
 */
 #include <SPI.h>
 #include <Ethernet.h>
 int maxvolt = 5; //The maximun voltage of the voltage divider
+int intV = 4.65; //The internal 5v, need to be right for the current sensor calibration
 
 // Enter a MAC address and IP address for your controller below.
 // The IP address will be dependent on your local network:
@@ -98,7 +108,8 @@ void dashboardPage(EthernetClient &client) {
   client.println("<ul>");
   for (int i = 0; i < 4; i++) {
     int sensorValue = analogRead(currentPins[i]);
-    int current_mA = (sensorValue / 1023.0) * 5000 / 185; // Conversione per ACS712 (185mV/A)
+    float voltage = (float(sensorValue) / 1023) * intV;
+    int current_mA = (voltage - (intV / 2)) / 0.185;    
     client.print("<li>Current sensor ");
     client.print(i + 1);
     client.print(": ");
